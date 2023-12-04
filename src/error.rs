@@ -1,4 +1,4 @@
-use std::{fmt::Debug, panic::Location};
+use std::{fmt, fmt::Debug, panic::Location};
 
 #[derive(Debug)]
 pub struct Error {
@@ -18,13 +18,10 @@ impl Error {
   }
 }
 
-impl<T: std::error::Error + 'static> From<T> for Error {
-  #[track_caller]
-  fn from(value: T) -> Self {
-    let caller = Location::caller();
-    let line = Location::line(caller);
-    let column = Location::column(caller);
-    let file = Location::file(caller).to_string();
-    Self {line, column, file}
+impl fmt::Display for Error {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "Unexpected error in HTML Editor")
   }
 }
+
+impl std::error::Error for Error {}
