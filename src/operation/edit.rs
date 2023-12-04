@@ -1,5 +1,5 @@
 use super::Selector;
-use crate::{Element, Node};
+use crate::{Element, Node, error};
 
 /// Insert and remove elements by [`Selector`], and trim the DOM.
 pub trait Editable {
@@ -92,7 +92,7 @@ pub trait Editable {
     ///     <!--Hello World!-->
     /// </div>"#)
     /// ```
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Node) -> &mut Self;
+    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error>;
 
     /// Executes a given function for the node in `self` for the given selector.
     ///
@@ -202,17 +202,17 @@ impl Editable for Vec<Node> {
         self
     }
 
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Node) -> &mut Self {
+    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error> {
         for node in self.iter_mut() {
             if let Node::Element(ref mut el) = node {
                 if selector.matches(el) {
-                    *node = f(el);
+                    *node = f(el)?;
                 } else {
                     el.replace_with(selector, f);
                 }
             }
         }
-        self
+        Ok(self)
     }
 
     fn execute_for(&mut self, selector: &Selector, mut f: impl FnMut(&mut Element)) {
@@ -239,9 +239,9 @@ impl Editable for Element {
         self
     }
 
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Node) -> &mut Self {
-        self.children.replace_with(selector, f);
-        self
+    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error> {
+        self.children.replace_with(selector, f)?;
+        Ok(self)
     }
 
     fn execute_for(&mut self, selector: &Selector, mut f: impl FnMut(&mut Element)) {

@@ -78,12 +78,13 @@ fn replace() {
         .unwrap()
         .replace_with(&p_selector, |p| {
             let new_text = format!("{} World!", p.children[0].html());
-            Node::Element(Element {
+            let node = Node::Element(Element {
                 name: "p".to_string(),
                 attrs: vec![],
                 children: vec![Node::Text(new_text)],
-            })
-        })
+            });
+            Ok(node)
+        }).unwrap()
         .html();
     assert_eq!(html, REPLACED_HTML);
 }

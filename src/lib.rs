@@ -36,6 +36,7 @@
 mod data;
 mod parse;
 
+pub mod error;
 pub mod operation;
 
 pub use parse::parse;
