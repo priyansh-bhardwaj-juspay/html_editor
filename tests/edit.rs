@@ -76,7 +76,7 @@ fn replace() {
     let p_selector = Selector::from("p");
     let html = parse(HTML)
         .unwrap()
-        .replace_with(&p_selector, |p| {
+        .replace_with(&p_selector, &|p| {
             let new_text = format!("{} World!", p.children[0].html());
             let node = Node::Element(Element {
                 name: "p".to_string(),

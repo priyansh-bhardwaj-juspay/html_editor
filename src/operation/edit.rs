@@ -92,7 +92,9 @@ pub trait Editable {
     ///     <!--Hello World!-->
     /// </div>"#)
     /// ```
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error>;
+    fn replace_with<F>(&mut self, selector: &Selector, f: &F) -> Result<&mut Self, error::Error>
+    where
+        F: Fn(&Element) -> Result<Node, error::ErrorDetail>;
 
     /// Executes a given function for the node in `self` for the given selector.
     ///
@@ -202,11 +204,14 @@ impl Editable for Vec<Node> {
         self
     }
 
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error> {
+    fn replace_with<F>(&mut self, selector: &Selector, f: &F) -> Result<&mut Self, error::Error>
+    where
+        F: Fn(&Element) -> Result<Node, error::ErrorDetail>,
+    {
         for node in self.iter_mut() {
             if let Node::Element(ref mut el) = node {
                 if selector.matches(el) {
-                    *node = f(el)?;
+                    *node = f(el).map_err(|_| error::Error)?;
                 } else {
                     el.replace_with(selector, f);
                 }
@@ -239,7 +244,10 @@ impl Editable for Element {
         self
     }
 
-    fn replace_with(&mut self, selector: &Selector, f: fn(el: &Element) -> Result<Node, error::Error>) -> Result<&mut Self, error::Error> {
+    fn replace_with<F>(&mut self, selector: &Selector, f: &F) -> Result<&mut Self, error::Error>
+    where
+        F: Fn(&Element) -> Result<Node, error::ErrorDetail>,
+    {
         self.children.replace_with(selector, f)?;
         Ok(self)
     }
